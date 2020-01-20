@@ -1,6 +1,6 @@
 package com.github.fumkato
 
-public class OnDiscnnectHandler{
+public class OnDisconnectHandler{
   public Response handleRequest() {
 
   }
