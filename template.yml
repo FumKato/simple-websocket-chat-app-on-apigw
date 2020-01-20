@@ -121,6 +121,18 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
+          WEBSOCKET_ENDPOINT:
+            !Join [
+              '',
+              [
+                'https://',
+                !Ref SimpleChatWebSocket,
+                '.execute-api.',
+                !Ref 'AWS::Region',
+                '.amazonaws.com/',
+                !Ref 'Stage',
+              ],
+            ]
       Policies:
       - DynamoDBCrudPolicy:
           TableName: !Ref TableName
@@ -143,6 +155,18 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
+          WEBSOCKET_ENDPOINT:
+            !Join [
+              '',
+              [
+                'https://',
+                !Ref SimpleChatWebSocket,
+                '.execute-api.',
+                !Ref 'AWS::Region',
+                '.amazonaws.com/',
+                !Ref 'Stage',
+              ],
+            ]
       Policies:
       - DynamoDBCrudPolicy:
           TableName: !Ref TableName
@@ -165,6 +189,18 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
+          WEBSOCKET_ENDPOINT:
+            !Join [
+              '',
+              [
+                'https://',
+                !Ref SimpleChatWebSocket,
+                '.execute-api.',
+                !Ref 'AWS::Region',
+                '.amazonaws.com/',
+                !Ref 'Stage',
+              ],
+            ]
       Policies:
       - DynamoDBCrudPolicy:
           TableName: !Ref TableName
