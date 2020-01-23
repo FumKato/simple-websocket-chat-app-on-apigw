@@ -15,6 +15,12 @@ public class OnConnectHandler extends AbstractWebSocketHandler{
     String connectionId = getConnectionId(input);
     String tableName = System.getenv(TABLE_NAME_ENV);
 
+    System.out.println("Start method. table name: " + tableName);
+
+    DynamoDbClient client = DynamoDbClient.builder()
+            .region(Region.AP_NORTHEAST_1)
+            .build();
+
     Map<String, AttributeValue> items = new HashMap<>();
     AttributeValue value = AttributeValue.builder()
             .s(connectionId)
@@ -24,11 +30,12 @@ public class OnConnectHandler extends AbstractWebSocketHandler{
             .tableName(tableName)
             .item(items)
             .build();
+    System.out.println("connectionId: " + connectionId);
 
-    DynamoDbClient client = DynamoDbClient.builder()
-            .region(Region.AP_NORTHEAST_1)
-            .build();
+    System.out.println("Register");
     client.putItem(request);
+
+    System.out.println("Done");
 
     Response response = new Response();
     response.setStatusCode(200);

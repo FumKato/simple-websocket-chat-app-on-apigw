@@ -5,21 +5,13 @@ Description: >
   SAM Template for simple-websockets-chat-app that has the DynamoDB table and Lambda
   functions needed to demonstrate the Websocket protocol on API Gateway.
 
-Resources:
-  DynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: "Connections"
-      AttributeDefinitions:
-        - AttributeName: "connectionId"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "connectionId"
-          KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+Parameters:
+  StageName:
+    Type: String
+    Default: "Prod"
+    Description: "Deployment stage name"
 
+Resources:
   SimpleChatWebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -86,21 +78,7 @@ Resources:
       IntegrationUri:
         Fn::Sub:
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendMessageFunction.Arn}/invocations
-  Deployment:
-    Type: AWS::ApiGatewayV2::Deployment
-    DependsOn:
-    - ConnectRoute
-    - SendRoute
-    - DisconnectRoute
-    Properties:
-      ApiId: !Ref SimpleChatWebSocket
-  Stage:
-    Type: AWS::ApiGatewayV2::Stage
-    Properties:
-      StageName: Prod
-      Description: Prod Stage
-      DeploymentId: !Ref Deployment
-      ApiId: !Ref SimpleChatWebSocket
+      
   ConnectionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -115,17 +93,19 @@ Resources:
         WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
-      TableName: !Ref TableName
+      TableName: "Connections"
+
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./target/xxx.jar
-      Handler: com.github.fumkato.OnConnectHandler.handleRequest
-      MemorySize: 256
+      CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
+      Handler: com.github.fumkato.OnConnectHandler::handleRequest
+      MemorySize: 1024
+      Timeout: 10
       Runtime: java11
       Environment:
         Variables:
-          TABLE_NAME: !Ref DynamoDBTable
+          TABLE_NAME: !Ref ConnectionsTable
           WEBSOCKET_ENDPOINT:
             !Join [
               '',
@@ -135,12 +115,12 @@ Resources:
                 '.execute-api.',
                 !Ref 'AWS::Region',
                 '.amazonaws.com/',
-                !Ref 'Stage',
+                !Ref StageName
               ],
             ]
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: !Ref ConnectionsTable
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -150,16 +130,18 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref OnConnectFunction
       Principal: apigateway.amazonaws.com
+
   OnDisconnectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./target/xxx.jar
-      Handler: com.github.fumkato.OnDisconnectHandler.handleRequest
-      MemorySize: 256
+      CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
+      Handler: com.github.fumkato.OnDisconnectHandler::handleRequest
+      MemorySize: 1024
+      Timeout: 10
       Runtime: java11
       Environment:
         Variables:
-          TABLE_NAME: !Ref DynamoDBTable
+          TABLE_NAME: !Ref ConnectionsTable
           WEBSOCKET_ENDPOINT:
             !Join [
               '',
@@ -169,12 +151,12 @@ Resources:
                 '.execute-api.',
                 !Ref 'AWS::Region',
                 '.amazonaws.com/',
-                !Ref 'Stage',
+                !Ref StageName
               ],
             ]
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: !Ref ConnectionsTable
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -184,16 +166,18 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref OnDisconnectFunction
       Principal: apigateway.amazonaws.com
+
   SendMessageFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./target/xxx.jar
-      Handler: com.github.fumkato.SendMessageHandler.handleRequest
-      MemorySize: 256
+      CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
+      Handler: com.github.fumkato.SendMessageHandler::handleRequest
+      MemorySize: 1024
+      Timeout: 10
       Runtime: java11
       Environment:
         Variables:
-          TABLE_NAME: !Ref DynamoDBTable
+          TABLE_NAME: !Ref ConnectionsTable
           WEBSOCKET_ENDPOINT:
             !Join [
               '',
@@ -203,12 +187,12 @@ Resources:
                 '.execute-api.',
                 !Ref 'AWS::Region',
                 '.amazonaws.com/',
-                !Ref 'Stage',
+                !Ref StageName
               ],
             ]
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: !Ref ConnectionsTable
       - Statement:
         - Effect: Allow
           Action:
@@ -224,6 +208,22 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SendMessageFunction
       Principal: apigateway.amazonaws.com
+
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - ConnectRoute
+      - SendRoute
+      - DisconnectRoute
+    Properties:
+      ApiId: !Ref SimpleChatWebSocket
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: !Ref StageName
+      Description: !Sub "${StageName} Stage"
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref SimpleChatWebSocket
 
 Outputs:
   ConnectionsTableArn:
