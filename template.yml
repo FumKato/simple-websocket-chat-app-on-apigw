@@ -4,23 +4,28 @@ Description: >
   simple-websockets-chat-app
   SAM Template for simple-websockets-chat-app that has the DynamoDB table and Lambda
   functions needed to demonstrate the Websocket protocol on API Gateway.
-Parameters:
-  TableName:
-    Type: String
-    Default: 'simplechat_connections'
-    Description: (Required) The name of the new DynamoDB to store connection identifiers for each connected clients. Minimum 3 characters
-    MinLength: 3
-    MaxLength: 50
-    AllowedPattern: ^[A-Za-z_]+$
-    ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
 
 Resources:
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "Connections"
+      AttributeDefinitions:
+        - AttributeName: "connectionId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "connectionId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   SimpleChatWebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
       Name: SimpleChatWebSocket
       ProtocolType: WEBSOCKET
-      RouteSelectionExpression: "$request.body.message"
+      RouteSelectionExpression: "$request.body.action"
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -120,7 +125,7 @@ Resources:
       Runtime: java11
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref DynamoDBTable
           WEBSOCKET_ENDPOINT:
             !Join [
               '',
@@ -154,7 +159,7 @@ Resources:
       Runtime: java11
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref DynamoDBTable
           WEBSOCKET_ENDPOINT:
             !Join [
               '',
@@ -188,7 +193,7 @@ Resources:
       Runtime: java11
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref DynamoDBTable
           WEBSOCKET_ENDPOINT:
             !Join [
               '',
@@ -239,4 +244,4 @@ Outputs:
 
   WebSocketURI:
     Description: "The WSS Protocol URI to connect to"
-    Value: !Join [ '', [ 'wss://', !Ref SimpleChatWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage']
+    Value: !Join [ '', [ 'wss://', !Ref SimpleChatWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage']]

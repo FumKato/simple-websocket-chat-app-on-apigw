@@ -1,4 +1,4 @@
-package com.github.fumkato
+package com.github.fumkato;
 
 public class Response{
   private int statusCode;
