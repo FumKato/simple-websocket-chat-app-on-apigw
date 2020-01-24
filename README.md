@@ -3,10 +3,10 @@ Sample websocket app for Amazon API Gateway.
 This app is written by Java.
 
 ## Requirements
-* Java 11+
-* Maven
-* AWS CLI
-* SAM CLI
+* JDK 11+
+* [Maven](https://maven.apache.org/)
+* [AWS CLI](https://aws.amazon.com/jp/cli/)
+* [SAM CLI](https://github.com/awslabs/aws-sam-cli)
 
 ## How To Deploy
 Build this project.
@@ -26,7 +26,7 @@ sam deploy --template-file packaged.yaml --stack-name simple-websocket-chat-app 
 ```
 
 ## How To Use
-Install WebSocket client like wscat.
+Install WebSocket client like [wscat](https://github.com/websockets/wscat).
 Then, connect WebSocket endpoint. (You can see it in stack output values)
 ```bash
 wscat -c wss://YOUR_APP_ENDPOINT
