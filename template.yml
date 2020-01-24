@@ -78,6 +78,26 @@ Resources:
       IntegrationUri:
         Fn::Sub:
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendMessageFunction.Arn}/invocations
+  LogRequestRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SimpleChatWebSocket
+      RouteKey: logrequest
+      AuthorizationType: NONE
+      OperationName: LogRequestRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref LogRequestInteg
+  LogRequestInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref SimpleChatWebSocket
+      Description: Send Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub:
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LogRequestFunction.Arn}/invocations
       
   ConnectionsTable:
     Type: AWS::DynamoDB::Table
@@ -99,7 +119,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
-      Handler: com.github.fumkato.OnConnectHandler::handleRequest
+      Handler: com.github.fumkato.handler.OnConnectHandler::handleRequest
       MemorySize: 1024
       Timeout: 10
       Runtime: java11
@@ -135,7 +155,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
-      Handler: com.github.fumkato.OnDisconnectHandler::handleRequest
+      Handler: com.github.fumkato.handler.OnDisconnectHandler::handleRequest
       MemorySize: 1024
       Timeout: 10
       Runtime: java11
@@ -171,7 +191,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
-      Handler: com.github.fumkato.SendMessageHandler::handleRequest
+      Handler: com.github.fumkato.handler.SendMessageHandler::handleRequest
       MemorySize: 1024
       Timeout: 10
       Runtime: java11
@@ -209,11 +229,30 @@ Resources:
       FunctionName: !Ref SendMessageFunction
       Principal: apigateway.amazonaws.com
 
+  LogRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./target/simple-websocket-chat-app-on-apigw-1.0-SNAPSHOT.jar
+      Handler: com.github.fumkato.handler.LogRequestHandler::handleRequest
+      MemorySize: 1024
+      Timeout: 10
+      Runtime: java11
+  LogRequestPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SimpleChatWebSocket
+      - LogRequestFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LogRequestFunction
+      Principal: apigateway.amazonaws.com
+
   Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - ConnectRoute
       - SendRoute
+      - LogRequestRoute
       - DisconnectRoute
     Properties:
       ApiId: !Ref SimpleChatWebSocket

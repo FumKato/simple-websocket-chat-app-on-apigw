@@ -1,10 +1,10 @@
-package com.github.fumkato;
+package com.github.fumkato.handler;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fumkato.model.Response;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.apigatewaymanagementapi.ApiGatewayManagementApiClient;
@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SendMessageHandler extends AbstractWebSocketHandler{
+public class SendMessageHandler extends AbstractWebSocketHandler {
   private static final String WEBSOCKET_ENDPOINT_ENV = "WEBSOCKET_ENDPOINT";
 
   @Override
